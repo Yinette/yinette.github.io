@@ -366,6 +366,8 @@ The 500&rsquo;s seem to be caused by me setting restrictive facls on the postfix
 
 <p>I wanted something I could use on the way to and from work, and whenever I was out. Something that was low-power and could sit in my bag.</p>
 
+<p><strong>UPDATE</strong> I fixed the issue where the usb modem would not show itself as an interface at boot, check the end of the post to find the fix!</p>
+
 <h3>Why AWACS?</h3>
 
 <p>I have massive planespergers&hellip; From wikipedia:</p>
@@ -463,6 +465,19 @@ PASS: zte9x15
 <h3>Weird Quirks</h3>
 
 <p>Sometimes, the USB modem won&rsquo;t show up unless you plug it in after the AP boots. If this happens, just do so and run <code>ifup wan</code> from a root shell on the AP, everything will take care of itself from there.</p>
+
+<p><strong>FIXED</strong></p>
+
+<p>The way to solve this is rather silly, but it does work:</p>
+
+<p>For some reason, the <code>rndis_host</code> module is not loaded into <code>/etc/modules-boot.d</code> to fix this run:</p>
+
+<pre><code>ln -s /etc/modules.d/usb-net-rndis /etc/modules-boot.d/50-usb-net-rndis
+</code></pre>
+
+<p>Then in <code>/etc/rc.local add the line</code>/etc/init.d/usbmode restart`</p>
+
+<p>For some reason, the USB stuff has to be restarted when the Access Point comes online, this might be due to the fact that both the ZTE Modem and the AP power up at the same time, the AP might be ready before the ZTE modem is&hellip; This will refresh stuff and then your <code>usb0</code> interface should pop online at boot!</p>
 </div>
   
   
