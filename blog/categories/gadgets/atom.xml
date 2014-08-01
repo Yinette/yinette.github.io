@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Gadgets | Yinette's Webshite]]></title>
   <link href="http://yinette.github.io/blog/categories/gadgets/atom.xml" rel="self"/>
   <link href="http://yinette.github.io/"/>
-  <updated>2014-08-01T17:10:07+10:00</updated>
+  <updated>2014-08-01T17:12:19+10:00</updated>
   <id>http://yinette.github.io/</id>
   <author>
     <name><![CDATA[Yinette]]></name>
@@ -136,7 +136,7 @@ PASS: zte9x15
 <pre><code>ln -s /etc/modules.d/usb-net-rndis /etc/modules-boot.d/50-usb-net-rndis
 </code></pre>
 
-<p>Then in <code>/etc/rc.local add the line</code>/etc/init.d/usbmode restart`</p>
+<p>Then in <code>/etc/rc.local</code> add the line <code>/etc/init.d/usbmode restart</code></p>
 
 <p>For some reason, the USB stuff has to be restarted when the Access Point comes online, this might be due to the fact that both the ZTE Modem and the AP power up at the same time, the AP might be ready before the ZTE modem is&hellip; This will refresh stuff and then your <code>usb0</code> interface should pop online at boot!</p>
 ]]></content>
