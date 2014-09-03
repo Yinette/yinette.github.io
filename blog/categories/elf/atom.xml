@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Elf | Yinette's Webshite]]></title>
   <link href="http://yinette.github.io/blog/categories/elf/atom.xml" rel="self"/>
   <link href="http://yinette.github.io/"/>
-  <updated>2014-09-03T22:34:22+10:00</updated>
+  <updated>2014-09-03T22:41:10+10:00</updated>
   <id>http://yinette.github.io/</id>
   <author>
     <name><![CDATA[Yinette]]></name>
@@ -993,6 +993,8 @@ Someone has some serious resources going into this shit.</p>
 <p>Check out the following VirusTotal Result and MMD&rsquo;s comments with some quick RE notes :)</p>
 
 <p><a href="https://www.virustotal.com/en/file/6dd946e821df59705dcfeb79fab810336d0ee497fd715fb5b6711e05c0428f4d/analysis/">https://www.virustotal.com/en/file/6dd946e821df59705dcfeb79fab810336d0ee497fd715fb5b6711e05c0428f4d/analysis/</a></p>
+
+<p>It seems for this DDoS binary to run properly, it needs root access on the host system. This is why it is trying to root the system it has targeted.</p>
 
 <p>More to come!</p>
 
