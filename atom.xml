@@ -4,7 +4,7 @@
   <title><![CDATA[Yinette's Webshite]]></title>
   <link href="http://yinette.github.io/atom.xml" rel="self"/>
   <link href="http://yinette.github.io/"/>
-  <updated>2014-09-03T22:53:23+10:00</updated>
+  <updated>2014-09-23T21:22:18+10:00</updated>
   <id>http://yinette.github.io/</id>
   <author>
     <name><![CDATA[Yinette]]></name>
@@ -12,6 +12,331 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Using Shodan to Find Similarities Between Hosts in SSH Brute Force Ranges]]></title>
+    <link href="http://yinette.github.io/blog/2014/09/23/using-shodan-to-find-similarities-between-hosts-in-ssh-brute-force-ranges/"/>
+    <updated>2014-09-23T19:41:35+10:00</updated>
+    <id>http://yinette.github.io/blog/2014/09/23/using-shodan-to-find-similarities-between-hosts-in-ssh-brute-force-ranges</id>
+    <content type="html"><![CDATA[<p>So, I was messing with shodan this morning after reading <a href="http://cybergibbons.com/security-2/heatmiser-wifi-thermostat-vulnerabilities/">Cybergibbon&rsquo;s shenanigans with the Heatmiser Wifi Thermostat</a>, and reviewing the IDS and firewall logs as i do each morning.</p>
+
+<p>I wanted to see how much traffic the router had blocked from a particular range that likes to attack all the open SSH stuff on this particular network:</p>
+
+<pre>
+ 292K   12M DROP       all  --  *      *       61.174.51.0/24       0.0.0.0/0
+</pre>
+
+
+<p>heh neat. 12M of TCP &lsquo;SYN&rsquo; over about two weeks.</p>
+
+<p>Then with shodan fresh in the mind, I got an idea.</p>
+
+<h3>Preamble</h3>
+
+<p><img src="http://yinette.beta.anchortrove.com/Here-comes-the-Banhammer.jpg" alt="banhammer" /></p>
+
+<p>For those who don&rsquo;t know, the range of <code>61.147.51.0/24</code> is a range inside China that constantly attacks the reachable internet for weak SSH credentials, all day, every day. If you watch the <a href="http://map.ipviking.com/">Norse attack map</a>, you might see it doing its thing.</p>
+
+<p>There are other ranges within China that exhibit the same behaviour, namely <code>144.0.0.0/24</code> and <code>116.10.191.0/24</code>, but as a whole the entire <code>61.147.0.0/16</code> range is bad news. Never seen legit traffic from this range ever.</p>
+
+<p>Sure SSH scans happen, it&rsquo;s the internet, and we have a password policy that mandates passwords cannot be guessable by any 3 year old. However, whoever is behind this is putting a fair amount of trouble and resources into doing this, it&rsquo;s rather insane.</p>
+
+<p>Well so am I, so lets fuck with them.</p>
+
+<h3>Release the shodan!</h3>
+
+<p>So, shodan is awesome. It&rsquo;s a search engine for random stuff open to the internet. You can find a lot of fun, sadness and potentially a lot of trouble if you look for the right (or wrong) thing and play with it.</p>
+
+<p>Shodan is perfect for this research project, since I don&rsquo;t have to waste my oh so valuable resources to compile and run masscan (oh noes muh cycles!) or money to do it from a throw-away cloud shitbox.
+But more seriously, why risk being scanned back (or DDoS&rsquo;d) for performing reconnaissance? or being banhammered from AWS, Google Cloud, or OVH for doing naughty things?</p>
+
+<p>Shodan can take that risk for you if you don&rsquo;t want to. I&rsquo;d be more than happy to do it all myself (I am certainly capable of doing so), but that&rsquo;s not in scope of this post :)</p>
+
+<p>So, Shodan has an API, cool. I&rsquo;m a Sysadmin, give me a python library, <a href="https://shodan.readthedocs.org/en/latest/tutorial.html#looking-up-a-host">Oh look they have one</a></p>
+
+<p>I fired up my python virtualenv, ran vim and got to work.</p>
+
+<p>The result was an awful script that did awful things:</p>
+
+<pre>
+#!env /bin/python
+
+import shodan
+
+SUPER_SECRET_API_KEY = "LOL NOPE"
+
+api = shodan.Shodan(SUPER_SECRET_API_KEY)
+
+naughty_pricks = [
+        "61.174.51.45",
+        "61.174.51.198",
+        "61.174.51.202",
+        "61.174.51.235",
+        "61.174.51.231",
+        "61.174.51.230",
+        "61.174.51.204",
+        "61.174.51.216",
+        "61.174.51.201",
+        "61.174.51.232",
+        "61.174.51.227",
+        "61.174.51.208",
+        "61.174.51.228",
+        "61.174.51.226",
+        "61.174.51.209",
+        "61.174.51.225",
+        "61.174.51.217",
+        "61.174.51.195",
+        "61.174.51.212",
+        "61.174.51.234",
+        "61.174.51.214",
+        "61.174.51.207",
+        "61.174.51.196",
+        "61.174.51.211",
+        "61.174.51.200",
+        "61.174.51.218",
+        "61.174.51.205",
+        "61.174.51.215",
+        "61.174.51.197",
+        "61.174.51.229",
+        "61.174.51.213",
+        "61.174.51.199",
+        "61.174.51.221",
+        "61.174.51.233",
+        "61.174.51.224",
+        "61.174.51.194",
+        "61.174.51.203",
+        "61.174.51.223",
+        "61.174.51.210",
+        "61.174.51.222",
+        "61.174.51.219",
+        "61.174.51.206",
+        "61.174.51.220",
+]
+
+for prick in naughty_pricks:
+
+        host = api.host(prick)
+
+#I know this looks bad and I should feel bad. but idgaf call the cops.
+
+        print """
+---------------------------------------
+
+IP:  ***%s***
+
+ISP: ***%s***
+        """ % (host['ip_str'], host.get('org', 'n/a'))
+
+        for item in host['data']:
+                print """
+Port: ***%s***
+
+Banner:
+
+    %s
+""" % (item['port'], item['data'])
+
+</pre>
+
+
+<p>The result was <a href="http://yinette.github.io/shodan-results">this semi readable markdown output</a></p>
+
+<p>from here, i could then grep and mould the results as i saw fit.</p>
+
+<h2>The analysis</h2>
+
+<p>Since the hosts all had Port 137 open (NetBIOS), this gave me some information that i found useful for profiling our friends.</p>
+
+<p>A grep for hostnames gave me a nice tight list of all the hostnames of these systems:</p>
+
+<pre>
+IDC-073C1DF8683 <0x20>
+IDC-1D5C6BBDF3A <0x20>
+IDC-1D6EF802E40 <0x20>
+IDC-1DCEB780E28 <0x20>
+IDC-22D7C9E2B02 <0x20>
+IDC-2533F122B13 <0x20>
+IDC-26A1C33F316 <0x20>
+IDC-7213F7E9432 <0x20>
+IDC-85365D05ADF <0x20>
+IDC-8DDE4A14FF8 <0x20>
+IDC-996DA0223DD <0x20>
+IDC-A80C6B30775 <0x20>
+IDC-CECC265ED8B <0x20>
+IDC-D94F7772A93 <0x20>
+IDC-DC2D985494C <0x20>
+IDC-EAE1FBD4E07 <0x20>
+IDC-FB92254677F <0x20>
+ORGANIZA-D00C80 <0x20>
+TENGYI-163CAAB8 <0x20>
+TENGYI-1A7B7025 <0x20>
+TENGYI-56AB5E32 <0x20>
+TENGYI-75574DC7 <0x20>
+TENGYI-D1DEECDA <0x20>
+TENGYI-EA32E16E <0x20>
+WWW-0C90D5E834F <0x20>
+WWW-10B06E72287 <0x20>
+WWW-17385A1E7D9 <0x20>
+WWW-1F45ED6876A <0x20>
+WWW-357C3D5BA92 <0x20>
+WWW-3E63653E8D7 <0x20>
+WWW-69EB0C42237 <0x20>
+WWW-6DCC428E422 <0x20>
+WWW-7370E8EC3E0 <0x20>
+WWW-83CE25E3961 <0x20>
+WWW-890860C26E3 <0x20>
+WWW-8D870A2DAE6 <0x20>
+WWW-8FACE61F8D1 <0x20>
+WWW-C0F7DF227B2 <0x20>
+WWW-C8ABBE387A2 <0x20>
+WWW-CB73E270F45 <0x20>
+WWW-D7BB30955E9 <0x20>
+WWW-E099932AEE8 <0x20>
+</pre>
+
+
+<p>I asked about if the IDC- and prefixes meant anything on <a href="https://twitter.com/yinettesys/status/514217066916610048">twitter earlier today</a>, but the only thing i could get from it was it&rsquo;s possibly a GUID, truncated due to NetBIOS 15 chr limit on hostname values.</p>
+
+<p>The IDC- prefixed hostname is not uniqe to these machines, infact using shodan I was able to find similar instances from other countries too, but the bulk are in China and the US, same with the WWW- prefix, just more Chinese hits.</p>
+
+<p>From what I can find around the intertubes, &lsquo;TENGYI&rsquo; or Teng Yi is a name given to males in China, so probably some dude&rsquo;s name.</p>
+
+<p>The only one that stands out is ORGANIZA at IP <code>61.174.51.232</code> which is spanish for &ldquo;organized&rdquo;, I think it&rsquo;s generic. Might mean something to someone. As far as the other hosts go, this one was run of the mill, only Port 137 is open.</p>
+
+<h3>Running Services</h3>
+
+<p>Doing a quick count, the following was discovered:</p>
+
+<p><strong><em>43</em></strong> have port 137 (NetBIOS) open (all of them) with each on the default WORKGROUP workgroup.</p>
+
+<p><strong><em>32</em></strong> have port 21 (FTP) open with either Serv-U or Filezilla-Server as the ftpd</p>
+
+<p><strong><em>1</em></strong> has port 22 (SSH) open with the opening string <code>SSH-1.99-OpenSSH_3.9p1</code></p>
+
+<p><strong><em>1</em></strong> has port 443 (SSL) open, was unable to obtain certificate because the port is now closed.</p>
+
+<p><strong><em>1</em></strong> has port 445 (MS-RPC) open that had a semi-successful Anonymous login when shodan did a pass:</p>
+
+<pre>
+Anonymous login successful
+
+    Sharename       Type      Comment
+    ---------       ----      -------
+Error returning browse list: NT_STATUS_ACCESS_DENIED
+session request to 61.174.51.213 failed (Called name not present)
+session request to 61 failed (Called name not present)
+Anonymous login successful
+
+    Server               Comment
+    ---------            -------
+
+    Workgroup            Master
+    ---------            -------
+</pre>
+
+
+<p><strong><em>3</em></strong> have port 5432 (PostgreSQL) open, all of which responded with <code>could not create socket: Too many open files</code> lol</p>
+
+<p><strong><em>1</em></strong> had port 80 (HTTP) open, responded with a HTTP 400 with no server header when shodan queried it.</p>
+
+<p><strong><em>2</em></strong> had port 9200 open, running apache httpd, returned HTTP 403 and had the server header <code>Server: Apache/1.3.33 (Unix) mod_ssl/2.8.22 OpenSSL/0.9.6m</code> That&rsquo;s too old for Heartbleed btw, but all sorts of other shit lurks within versions that old.</p>
+
+<h3>Layer 2 Intelligence</h3>
+
+<p>Some of the NetBIOS responses contained the machine&rsquo;s NIC MAC Address, here&rsquo;s a list of them:</p>
+
+<pre>
+MAC: 00:19:bb:39:2e:5e
+MAC: 00:19:bb:3d:e3:90
+MAC: 00:19:bb:3e:cd:90
+MAC: 00:1a:4b:a4:fc:ac
+MAC: 00:1a:4b:a5:34:1a
+MAC: 00:1b:78:72:78:48
+MAC: 00:1b:78:73:97:82
+MAC: 00:1b:78:75:24:46
+MAC: 00:1b:78:76:dd:5e
+MAC: 00:1b:78:ca:4e:8a
+MAC: 00:1c:c4:78:fb:84
+MAC: 00:1e:0b:47:2a:fc
+MAC: 00:1e:0b:5e:1d:7a
+MAC: 00:1e:0b:5f:3a:54
+MAC: 00:1e:0b:5f:3f:ec
+MAC: 00:1e:0b:5f:5e:fa
+MAC: 00:1e:0b:8f:c0:08
+MAC: 00:1e:67:13:c7:1e
+MAC: 00:1e:67:25:ee:76
+MAC: 00:1e:67:66:b0:be
+MAC: 00:1e:c9:b6:ce:44
+MAC: 00:1f:29:0a:f5:f6
+MAC: 00:1f:29:64:a9:46
+MAC: 00:1f:29:ca:a6:fe
+MAC: 00:21:5a:45:6c:6a
+MAC: 00:22:19:51:97:e7
+MAC: 00:22:19:51:ad:4a
+MAC: 00:22:19:ba:89:bd
+MAC: 00:24:e8:54:29:32
+MAC: 00:24:e8:5a:91:66
+MAC: 00:24:e8:5a:91:81
+MAC: 00:24:e8:5a:9f:aa
+MAC: 00:24:e8:5a:b3:1d
+MAC: 00:24:e8:5a:b3:28
+MAC: 08:60:6e:57:29:e7
+MAC: 68:b5:99:b4:04:86
+MAC: bc:5f:f4:91:ee:51
+MAC: bc:5f:f4:91:ee:d8
+MAC: bc:5f:f4:91:ee:ea
+MAC: c8:60:00:83:be:1a
+MAC: d4:85:64:53:51:dc
+MAC: d4:85:64:53:dc:40
+</pre>
+
+
+<p>From here, we can cut out only the first three bytes of the MAC to give us the Manufacturer uniq part, and feed that through a database:</p>
+
+<pre>
+00:19:bb - Hewlett Packard
+00:1a:4b - Hewlett Packard
+00:1b:78 - Hewlett Packard
+00:1c:c4 - Hewlett Packard
+00:1e:0b - Hewlett Packard
+00:1e:67 - Intel
+00:1e:c9 - Dell
+00:1f:29 - Hewlett Packard
+00:21:5a - Hewlett Packard
+00:22:19 - Dell
+00:24:e8 - Dell
+08:60:6e - ASUSTek Computer
+68:b5:99 - Hewlett Packard
+bc:5f:f4 - ASRock
+c8:60:00 - ASUSTek Computer
+d4:85:64 - Hewlett Packard
+</pre>
+
+
+<p>Interesting mix, but one very obvious favorite in this list.</p>
+
+<h3>Observations</h3>
+
+<p>Most of the hosts presented as Windows boxes running a ftpd, however some also showed signs of running *NIX applications like apache, SSH and Possibly PostgreSQL,</p>
+
+<p>some possibilities come of this:</p>
+
+<ul>
+<li>The IP in question is actually a Gateway for a bunch of machines running behind a NAT</li>
+<li>The IPs are windows machines running Virtual machines (they seem kinda old), or running cygwin/mingw.</li>
+<li>I don&rsquo;t know. Anything could be happening.</li>
+</ul>
+
+
+<h3>Conclusions</h3>
+
+<p>Its hard to tell if these are just compromised, or if there is any organisation behind them. My suspicious mind likes to think the latter.</p>
+
+<p>Unless someone jumps the gun, pops a few of these boxes and unravels the secrets they hold, I don&rsquo;t think we&rsquo;ll ever know. Oh well. They&rsquo;re banhammered. whatever.</p>
+
+<p>Thanks!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[It All Began With a Struts Exploit Attempt. Part 1]]></title>
