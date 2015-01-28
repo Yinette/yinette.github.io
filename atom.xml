@@ -4,7 +4,7 @@
   <title><![CDATA[Yinette's Webshite]]></title>
   <link href="http://yinette.github.io/atom.xml" rel="self"/>
   <link href="http://yinette.github.io/"/>
-  <updated>2015-01-29T10:42:45+11:00</updated>
+  <updated>2015-01-29T10:53:33+11:00</updated>
   <id>http://yinette.github.io/</id>
   <author>
     <name><![CDATA[Yinette]]></name>
@@ -234,7 +234,7 @@ syslogd    1435               root  mem       REG              253,3            
 
 <p>Other services like mysqld, redis, etc that will either kill important data or take a noticible time to start up again might need to be scheduled in with your user for when an appropriate time to restart these is.</p>
 
-<p>I would recommend a full reboot, as this will ensure everything comes back with a fresh glibc.</p>
+<p><strong>I would still highly recommend a full reboot anyway, as this will ensure everything comes back with a fresh glibc, and you wont get nasty surprises.</strong></p>
 
 <p>Using sysvinit, the way to restart these as root/sudo is as follows:</p>
 
