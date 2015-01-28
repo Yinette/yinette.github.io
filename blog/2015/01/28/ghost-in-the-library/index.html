@@ -9,7 +9,7 @@
   <meta name="author" content="Yinette">
 
   
-  <meta name="description" content="Upgrade alone complex So, there&rsquo;s a 12 year old bug in glibc, and it allows RCE with permissions of the running process, how wonderful. Here& &hellip;">
+  <meta name="description" content="Upgrade alone complex &ndash; Updating glibc without the pain, misery, and the laughing man So, there&rsquo;s a 12 year old bug in glibc, and it &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -103,13 +103,21 @@
   </header>
 
 
-<div class="entry-content"><h2>Upgrade alone complex</h2>
+<div class="entry-content"><h2>Upgrade alone complex &ndash; Updating glibc without the pain, misery, and the laughing man</h2>
 
 <p>So, there&rsquo;s a 12 year old bug in glibc, and it allows RCE with permissions of the running process, how wonderful.</p>
 
+<p>Oh yeah, and a simple DNS Lookup can cause it if you use a particular function from the 80&rsquo;s.</p>
+
+<p>And yes, it&rsquo;s now our problem.</p>
+
+<p><img src="http://i.imgur.com/lxOZO.jpg" alt="data" /></p>
+
 <p>Here&rsquo;s a link to the write-up provided by Qualys: <a href="http://www.openwall.com/lists/oss-security/2015/01/27/9">http://www.openwall.com/lists/oss-security/2015/01/27/9</a></p>
 
-<p>I&rsquo;m starting to get familiar to these, even their corny little names, then the mass hysteria from the mainstream media.</p>
+<p>And here&rsquo;s a post by Rob at Errata Security called <a href="http://blog.erratasec.com/2015/01/you-shouldnt-be-using-gethostbyname.html">You shouldn&rsquo;t be using gethostbyname() anyway</a> good advice.</p>
+
+<p>I&rsquo;m starting to get the hang of these named vulnerabilities, just not the media frenzy that comes after, so, I thought i&rsquo;d do something about it.</p>
 
 <p>Anyway, time to bring some calm to an otherwise very distressing situation for some sysadmins, and show how you can ensure everything is patched and ok, with MINIMAL downtime.</p>
 
@@ -293,6 +301,17 @@ libvirtd   2518  2528        root  DEL       REG              254,0             
 
 
 <p>the &lsquo;mem&rsquo; is now &lsquo;DEL&rsquo;, this means its mapped in memory, but the file behind it no longer exists. This is still running a vulnerable glibc.</p>
+
+<h4>Update!</h4>
+
+<p>An attentive follower noticed something different with their lsof output with a 32-bit kernel:</p>
+
+<pre>
+syslogd    1435               root  mem       REG              253,3            74591600 (deleted)/lib/i386-linux-gnu/libc-2.13.so (stat: No such file or directory)
+</pre>
+
+
+<p>You will note that lsof still has it in memory, but notes the file itself is deleted.</p>
 
 <h3>The solution? Restart services!</h3>
 
