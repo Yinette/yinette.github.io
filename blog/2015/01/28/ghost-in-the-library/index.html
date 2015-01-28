@@ -199,7 +199,7 @@ a new glibc into your system.</p>
 <p>The command is:</p>
 
 <pre>
-lsof -n | grep libc-
+sudo lsof -n | grep libc-
 </pre>
 
 
@@ -302,14 +302,16 @@ libvirtd   2518  2528        root  DEL       REG              254,0             
 
 <p>I would recommend a full reboot, as this will ensure everything comes back with a fresh glibc.</p>
 
-<p>Using sysvinit, the way to restart these is as follows:</p>
+<p>Using sysvinit, the way to restart these as root/sudo is as follows:</p>
 
 <pre>
-service THING restart
+sudo service THING restart
 </pre>
 
 
 <p>Though, note that some things have themselves named differently than you would think. For example <strong>sshd</strong> under debian sysvinit is <strong>&lsquo;ssh&rsquo;</strong> under the service control script, use tab-complete (mash TAB) if you are unsure. (Likewise with apache2 on RHEL/Centos, it can sometimes be httpd)</p>
+
+<p>Systemd users will be able to use <code>sudo systemctl THING restart</code>, however i&rsquo;d imagine systems that use systemd would have already patched glibc&hellip; Oh well, might be different for everyone.</p>
 
 <p>After that, assuming the service has restarted without issue and everything looks peachy, the &lsquo;DEL&rsquo; should change to &lsquo;mem&rsquo;.</p>
 
@@ -318,7 +320,7 @@ service THING restart
 <p>Here&rsquo;s a quick one getting a list of processes and also looking for &lsquo;DEL&rsquo;</p>
 
 <pre>
-lsof -n | grep libc- | grep DEL
+sudo lsof -n | grep libc- | grep DEL
 </pre>
 
 
