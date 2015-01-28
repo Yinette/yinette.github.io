@@ -9,7 +9,7 @@
   <meta name="author" content="Yinette">
 
   
-  <meta name="description" content="So, I was messing with shodan this morning after reading Cybergibbon&rsquo;s shenanigans with the Heatmiser Wifi Thermostat, and reviewing the IDS &hellip;">
+  <meta name="description" content="Upgrade alone complex So, there&rsquo;s a 12 year old bug in glibc, and it allows RCE with permissions of the running process, how wonderful. Here& &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -77,6 +77,265 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/01/28/ghost-in-the-library/">GHOST in the Library</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-01-28T13:16:07+11:00" pubdate data-updated="true">Jan 28<sup>th</sup>, 2015</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Upgrade alone complex</h2>
+
+<p>So, there&rsquo;s a 12 year old bug in glibc, and it allows RCE with permissions of the running process, how wonderful.</p>
+
+<p>Here&rsquo;s a link to the write-up provided by Qualys: <a href="http://www.openwall.com/lists/oss-security/2015/01/27/9">http://www.openwall.com/lists/oss-security/2015/01/27/9</a></p>
+
+<p>I&rsquo;m starting to get familiar to these, even their corny little names, then the mass hysteria from the mainstream media.</p>
+
+<p>Anyway, time to bring some calm to an otherwise very distressing situation for some sysadmins, and show how you can ensure everything is patched and ok, with MINIMAL downtime.</p>
+
+<h3>let&rsquo;s begin</h3>
+
+<p>Check if you are vulnerable!</p>
+
+<p>The people at Qualys who found this bug provided a nice little PoC written in C that you can run to check if your glibc is vulnerable.</p>
+
+<p>Just copypasta the code below into your text editor of choice and save as &lsquo;GHOST.c&rsquo; or something along those lines.</p>
+
+<pre><code>#include &lt;netdb.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;errno.h&gt;
+
+#define CANARY "in_the_coal_mine"
+
+struct {
+  char buffer[1024];
+  char canary[sizeof(CANARY)];
+} temp = { "buffer", CANARY };
+
+int main(void) {
+  struct hostent resbuf;
+  struct hostent *result;
+  int herrno;
+  int retval;
+
+  /*** strlen (name) = size_needed - sizeof (*host_addr) - sizeof (*h_addr_ptrs) - 1; ***/
+  size_t len = sizeof(temp.buffer) - 16*sizeof(unsigned char) - 2*sizeof(char *) - 1;
+  char name[sizeof(temp.buffer)];
+  memset(name, '0', len);
+  name[len] = '\0';
+
+  retval = gethostbyname_r(name, &amp;resbuf, temp.buffer, sizeof(temp.buffer), &amp;result, &amp;herrno);
+
+  if (strcmp(temp.canary, CANARY) != 0) {
+    puts("vulnerable");
+    exit(EXIT_SUCCESS);
+  }
+  if (retval == ERANGE) {
+    puts("not vulnerable");
+    exit(EXIT_SUCCESS);
+  }
+  puts("should not happen");
+  exit(EXIT_FAILURE);
+}
+</code></pre>
+
+<p>Then, once that&rsquo;s done do the following:</p>
+
+<pre><code>gcc GHOST.c -o GHOST
+</code></pre>
+
+<p>Replace <code>GHOST.C</code> with whatever you called the thing above.</p>
+
+<p>Preferrably <strong>not as root</strong> run your new binary like thus</p>
+
+<pre><code>./GHOST
+</code></pre>
+
+<p>If you get &ldquo;Vulnerable&rdquo; as the return, you need to upgrade, keep following this guide, otherwise, you&rsquo;re set! But best to check below where i&rsquo;m trying to find stuff running using older libs.</p>
+
+<h3>Upgrade time!</h3>
+
+<p>Upgrade your packages, be it with aptitude, apt, pacman, yum or emerge. If your upstream has updated the package, an &lsquo;upgrade all&rsquo; should suffice and bring
+a new glibc into your system.</p>
+
+<p>If you only want to install the new glibc package, there is a way to do it for each package manager, it should be documented or discussed, google will help with <code>update single package &lt;packagemanager&gt;</code> as the query.</p>
+
+<p>Here&rsquo;s some popular distro advisories and notifications where the packages have been upgraded:</p>
+
+<p>Debian&rsquo;s Announcement: <a href="https://lists.debian.org/debian-security-announce/2015/msg00025.html">https://lists.debian.org/debian-security-announce/2015/msg00025.html</a></p>
+
+<p>Redhat&rsquo;s Announcement: <a href="https://access.redhat.com/articles/1332213">https://access.redhat.com/articles/1332213</a></p>
+
+<p>Your init should do a warm restart and pull in the new glibc, this behaviour has been observed on Debian Wheezy with sysvinit</p>
+
+<h3>Finding things still running the old glibc</h3>
+
+<p>Let&rsquo;s face it, sometimes we cannot simply restart. Until we reach the nirvana of everything being clustered, we&rsquo;ll have to live with this.</p>
+
+<p>Here&rsquo;s a way to find services and processes that are still using the old glibc. For this example, I shall be using a Debian Wheezy machine.</p>
+
+<p>The command is:</p>
+
+<pre>
+lsof -n | grep libc-
+</pre>
+
+
+<p>output will be something like this:</p>
+
+<pre>
+init          1              root  mem       REG              254,0  1603600    7340685 /lib/x86_64-linux-gnu/libc-2.13.so
+udevd       374              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+rpcbind    1787              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+rpc.statd  1818             statd  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+rpc.idmap  1832              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+rsyslogd   2187              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+rs:main    2187  2192        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+rsyslogd   2187  2194        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+rsyslogd   2187  2195        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+acpid      2240              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+atd        2259            daemon  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+nmbd       2277              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+dbus-daem  2311        messagebus  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+smbd       2329              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+lldpd      2352              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+lldpd      2354            _lldpd  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+smbd       2372              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+avahi-dae  2386             avahi  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+avahi-dae  2387             avahi  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+nginx      2484              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+nginx      2485          www-data  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+nginx      2486          www-data  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+nginx      2487          www-data  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+nginx      2488          www-data  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2519        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2520        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2521        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2522        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2523        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2524        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2525        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2526        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2527        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+libvirtd   2518  2528        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+cron       2548              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+dhclient   2582              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+gmain      2655  2741        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+gdbus      2655  2836        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+polkitd    2841              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+gdbus      2841  2968        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+exim4      3083       Debian-exim  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+sshd       3108              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+minissdpd  3133              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+getty      3143              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+getty      3144              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+getty      3145              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+getty      3146              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+getty      3147              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+getty      3148              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+smbd      11793              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+udevd     27806              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+sshd      28095              root  mem       REG              254,0  1603600    7340685 /lib/x86_64-linux-gnu/libc-2.13.so
+bash      28100              root  mem       REG              254,0  1603600    7340685 /lib/x86_64-linux-gnu/libc-2.13.so
+lsof      28160              root  mem       REG              254,0  1603600    7340685 /lib/x86_64-linux-gnu/libc-2.13.so
+grep      28161              root  mem       REG              254,0  1603600    7340685 /lib/x86_64-linux-gnu/libc-2.13.so
+lsof      28162              root  mem       REG              254,0  1603600    7340685 /lib/x86_64-linux-gnu/libc-2.13.so
+lwresd    28213              root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+lwresd    28213 28214        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+lwresd    28213 28215        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+lwresd    28213 28216        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+lwresd    28213 28217        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+named     28322              bind  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+named     28322 28323        bind  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+named     28322 28324        bind  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+named     28322 28325        bind  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+named     28322 28326        bind  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+</pre>
+
+
+<p>Ok, let me point out a few things here off the bat.</p>
+
+<pre>
+init          1              root  mem       REG              254,0  1603600    7340685 /lib/x86_64-linux-gnu/libc-2.13.so
+</pre>
+
+
+<p>init here is running the updated version of glibc, notice in the third argument after &lsquo;root&rsquo; it has &lsquo;mem&rsquo;? This is a good thing. Its memory-mapped but has an existing file on disk behind it.</p>
+
+<p>However, if we look at libvirtd:</p>
+
+<pre>
+libvirtd   2518  2528        root  DEL       REG              254,0             7340558 /lib/x86_64-linux-gnu/libc-2.13.so
+</pre>
+
+
+<p>the &lsquo;mem&rsquo; is now &lsquo;DEL&rsquo;, this means its mapped in memory, but the file behind it no longer exists. This is still running a vulnerable glibc.</p>
+
+<h3>The solution? Restart services!</h3>
+
+<p>You can get some easy wins with daemons like sshd, libvirtd, postfix/exim4, etc since they can restart without showing any major visible disruption. Nginx/apache is in the list of these, but it depends on how much config it has to parse and how much traffic you get at any one moment.</p>
+
+<p>Other services like mysqld, redis, etc that will either kill important data or take a noticible time to start up again might need to be scheduled in with your user for when an appropriate time to restart these is.</p>
+
+<p>I would recommend a full reboot, as this will ensure everything comes back with a fresh glibc.</p>
+
+<p>Using sysvinit, the way to restart these is as follows:</p>
+
+<pre>
+service THING restart
+</pre>
+
+
+<p>Though, note that some things have themselves named differently than you would think. For example <strong>sshd</strong> under debian sysvinit is <strong>&lsquo;ssh&rsquo;</strong> under the service control script, use tab-complete (mash TAB) if you are unsure. (Likewise with apache2 on RHEL/Centos, it can sometimes be httpd)</p>
+
+<p>After that, assuming the service has restarted without issue and everything looks peachy, the &lsquo;DEL&rsquo; should change to &lsquo;mem&rsquo;.</p>
+
+<p>Now it&rsquo;s just a matter of hunting down other services or programs to restart.</p>
+
+<p>Here&rsquo;s a quick one getting a list of processes and also looking for &lsquo;DEL&rsquo;</p>
+
+<pre>
+lsof -n | grep libc- | grep DEL
+</pre>
+
+
+<p>That should be it.</p>
+
+<p>If you have any suggestions on how to do any of this better, please don&rsquo;t hesitate to mention me on twitter (@yinettesys), I will RT and converse with those who provide much better methodology than mine.</p>
+
+<p>Now, let&rsquo;s hope the media scrum isn&rsquo;t as large as it has been in the past.</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1872,6 +2131,10 @@ PASS: zte9x15
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/01/28/ghost-in-the-library/">GHOST in the Library</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/09/23/using-shodan-to-find-similarities-between-hosts-in-ssh-brute-force-ranges/">Using Shodan to Find Similarities Between Hosts in SSH Brute Force Ranges</a>
       </li>
     
@@ -1929,7 +2192,7 @@ PASS: zte9x15
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2014 - Yinette -
+  Copyright &copy; 2015 - Yinette -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
