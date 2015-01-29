@@ -4,7 +4,7 @@
   <title><![CDATA[Yinette's Webshite]]></title>
   <link href="http://yinette.github.io/atom.xml" rel="self"/>
   <link href="http://yinette.github.io/"/>
-  <updated>2015-01-29T10:53:33+11:00</updated>
+  <updated>2015-01-29T13:23:07+11:00</updated>
   <id>http://yinette.github.io/</id>
   <author>
     <name><![CDATA[Yinette]]></name>
@@ -26,7 +26,7 @@
 
 <p>And yes, it&rsquo;s now our problem.</p>
 
-<p><img src="http://i.imgur.com/lxOZO.jpg" alt="data" /></p>
+<p><img src="http://i.imgur.com/Jl266.jpg" alt="data" /></p>
 
 <p>Here&rsquo;s a link to the write-up provided by Qualys: <a href="http://www.openwall.com/lists/oss-security/2015/01/27/9">http://www.openwall.com/lists/oss-security/2015/01/27/9</a></p>
 
@@ -219,7 +219,7 @@ libvirtd   2518  2528        root  DEL       REG              254,0             
 
 <h4>Update!</h4>
 
-<p>An attentive follower noticed something different with their lsof output with a 32-bit kernel:</p>
+<p>A follower of mine @aptcat noticed something different with their lsof output with a 32-bit kernel:</p>
 
 <pre>
 syslogd    1435               root  mem       REG              253,3            74591600 (deleted)/lib/i386-linux-gnu/libc-2.13.so (stat: No such file or directory)
@@ -227,6 +227,8 @@ syslogd    1435               root  mem       REG              253,3            
 
 
 <p>You will note that lsof still has it in memory, but notes the file itself is deleted.</p>
+
+<p>Thanks for that @aptcat!</p>
 
 <h3>The solution? Restart services!</h3>
 
