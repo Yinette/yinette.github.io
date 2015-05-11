@@ -4,7 +4,7 @@
   <title><![CDATA[Yinette's Webshite]]></title>
   <link href="http://yinette.github.io/atom.xml" rel="self"/>
   <link href="http://yinette.github.io/"/>
-  <updated>2015-01-29T13:23:07+11:00</updated>
+  <updated>2015-05-11T14:20:22+10:00</updated>
   <id>http://yinette.github.io/</id>
   <author>
     <name><![CDATA[Yinette]]></name>
@@ -12,6 +12,101 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Alarming Trends With Recent Magento Breaches]]></title>
+    <link href="http://yinette.github.io/blog/2015/05/11/alarming-trends-with-recent-magento-breaches/"/>
+    <updated>2015-05-11T13:14:32+10:00</updated>
+    <id>http://yinette.github.io/blog/2015/05/11/alarming-trends-with-recent-magento-breaches</id>
+    <content type="html"><![CDATA[<p><img src="https://yinette.bucket.nchr.io/lodsofemone.png" alt="loads a money" /></p>
+
+<p><em>Note: Sparse on technical details due to ongoing investigations, this post is just a commentary</em></p>
+
+<p>As a Systems Administrator, I&rsquo;ve seen many kinds of web application compromises. From WordPress, to Joomla, to OSCommerce, you name it.</p>
+
+<p>As of recently, a new kind of vulnerability has arisen for the popular Magento ecommerce platform, aptly called &ldquo;Shoplift&rdquo;[1]
+This bug has some serious nastyness that allows for some very bad things to happen to an unpatched site, the exploit itself allows:</p>
+
+<ul>
+<li>Authentication Bypass</li>
+<li>Remote File Inclusion/Remote Code Execution (mostly due to auth bypass)</li>
+<li>SQL Query Injection</li>
+</ul>
+
+
+<h2>Differences in the usual compromise</h2>
+
+<p>This Magento exploit poses a rather different kind of threat than the ususal dime-a-dozen wordpress and joomla sites have, Observing some activity, and indeed corelating with other&rsquo;s discoveries, (namely Sucuri)[2] I&rsquo;m noticing something rather different about wild exploitations of shoplift, here&rsquo;s what I can see and my thoughts on it.</p>
+
+<ul>
+<li>Rare that webshells and other specific malicious files are being uploaded.</li>
+</ul>
+
+
+<p>While i have seen it in this particular exploit in the wild, it does not appear to be anything more than access persistance that is then sold on to do bad things (like spamming)</p>
+
+<ul>
+<li>Attackers are attempting to remain low profile.</li>
+</ul>
+
+
+<p>As with above, noting they&rsquo;re not leaving traces of their presence that particular anti-virus and web application firewalls can mitigate, they are mostly using parts of the site to their advantage, or are installing innocuous plugins to acheive their goal.</p>
+
+<ul>
+<li>Changes to core code are very subtle and ususally try to blend in with the other site functions.</li>
+</ul>
+
+
+<p>Backdoor access to administrative functions via very slight changes to code have been observed.</p>
+
+<ul>
+<li>The focus appears to be that of Customer information and sensitive financial details.</li>
+</ul>
+
+
+<p>Given the nature of information that a Magento site will see and store, I think it is highly likely this exploit is going to attract the internet&rsquo;s seedy underbelly of Privacy Theft, Credit Card Fraud, and other very malicious and serious offences, and given what I have seen so far, gives me high confidence of this being the case.</p>
+
+<ul>
+<li>A very dedicated core group set to work getting access only days after the details of the exploit were disclosed by the discovering party.</li>
+</ul>
+
+
+<p>As in the sucuri blog, these two Russian IPs have been very busy.</p>
+
+<ul>
+<li>Even after a site is patched, admin credentials belonging to attackers can still be present in a database.</li>
+</ul>
+
+
+<p>This leads to the next part of this post.</p>
+
+<h2>What you need to do as a Magento site maintainer/developer</h2>
+
+<ul>
+<li><p>Even if you have applied a patch, audit your administrator logs, and administrator user accounts!</p></li>
+<li><p>If in doubt , it&rsquo;s probably malicious. Engage a company like sucuri to look for malware and malicious modifications to site code, or completely re-install the core site files.</p></li>
+<li><p>Observe what your customers are saying. If they report that they are receiving emails perporting to be your business asking for credit card details, you got an issue.</p></li>
+</ul>
+
+
+<p>In conclusion, a major exploit and very wide-spread attacks were only a matter of time for Magento, as with any popular web application. The implications however are extremely serious, and I would be unsurprised to hear of future major credit card breaches similar to the PoS Malware on Target and other US retail/resturant chains, and the major breaches of sites using unpatched Coldfusion installations.[4]</p>
+
+<p>Keep watching your logs.</p>
+
+<h3>References</h3>
+
+<p><sub></p>
+
+<ol>
+<li><a href="https://shoplift.byte.nl/">https://shoplift.byte.nl/</a> &ndash; what is shoplift?</li>
+<li><a href="https://blog.sucuri.net/2015/04/magento-shoplift-supee-5344-exploits-in-the-wild.html">https://blog.sucuri.net/2015/04/magento-shoplift-supee-5344-exploits-in-the-wild.html</a> &ndash; Sucuri reporting of exploits in the wild.</li>
+<li><a href="http://www.oaic.gov.au/privacy/privacy-resources/privacy-guides/data-breach-notification-a-guide-to-handling-personal-information-security-breaches">http://www.oaic.gov.au/privacy/privacy-resources/privacy-guides/data-breach-notification-a-guide-to-handling-personal-information-security-breaches</a> &ndash; Advice (For Australian companies) on how to handle privacy breaches.</li>
+<li><a href="http://krebsonsecurity.com/2014/03/the-long-tail-of-coldfusion-fail/">http://krebsonsecurity.com/2014/03/the-long-tail-of-coldfusion-fail/</a> &ndash; Details into serious breaches of information on ColdFusion sites used for ecommerce.
+</sub></li>
+</ol>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[GHOST in the Library]]></title>

@@ -3,6 +3,12 @@
   
   
   <url>
+    <loc>http://yinette.github.io/blog/2015/05/11/alarming-trends-with-recent-magento-breaches/</loc>
+    <lastmod>2015-05-11T13:14:32+10:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
     <loc>http://yinette.github.io/blog/2015/01/28/ghost-in-the-library/</loc>
     <lastmod>2015-01-28T13:16:07+11:00</lastmod>
     <priority>0.8</priority>
@@ -34,22 +40,22 @@
   
   
   <url>
-    <loc>http://yinette.github.io/</loc>
-    <lastmod>2015-01-29T13:23:07+11:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  
-  <url>
     <loc>http://yinette.github.io/blog/archives/</loc>
-    <lastmod>2015-01-29T13:23:07+11:00</lastmod>
+    <lastmod>2015-05-11T14:20:22+10:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
+    <loc>http://yinette.github.io/</loc>
+    <lastmod>2015-05-11T14:20:22+10:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <url>
     <loc>http://yinette.github.io/shodan-results/</loc>
-    <lastmod>2015-01-29T13:23:07+11:00</lastmod>
+    <lastmod>2015-05-11T14:20:22+10:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
