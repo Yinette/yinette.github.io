@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Nginx | Yinette's Webshite]]></title>
+  <link href="http://yinette.github.io/blog/categories/nginx/atom.xml" rel="self"/>
+  <link href="http://yinette.github.io/"/>
+  <updated>2015-08-26T17:44:08+10:00</updated>
+  <id>http://yinette.github.io/</id>
+  <author>
+    <name><![CDATA[Yinette]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Word 2010's Bizzare Take on Urlencodes and How to Fix It in Nginx]]></title>
+    <link href="http://yinette.github.io/blog/2015/08/26/word-2010-s-bizzare-take-on-urlencodes-and-how-to-fix-it-in-nginx/"/>
+    <updated>2015-08-26T14:21:40+10:00</updated>
+    <id>http://yinette.github.io/blog/2015/08/26/word-2010-s-bizzare-take-on-urlencodes-and-how-to-fix-it-in-nginx</id>
+    <content type="html"><![CDATA[<p>I came across a really odd corner case in a customer ticket today, I was unable to find anything related to this problem that involved rewrites, so here it is! My first real kinda non-infosec post. Shoutout to all sysadmins and ops in the world, the struggle is real! &lt;3</p>
+
+<h2>The Problem</h2>
+
+<p>In Microsoft Word 2010, URLs that have been pasted into a document will hyperlink, however due to a reason I cannot find any reasonable explanation this is what happens:</p>
+
+<p>Example URL:</p>
+
+<pre><code>http://site.com/content#subcontent
+</code></pre>
+
+<p>What Word passes to the default browser:</p>
+
+<pre><code>http://site.com/content%20-%20subcontent
+</code></pre>
+
+<p>Yay.</p>
+
+<p>Basically <code>#</code> gets turned into <code>%20-%20</code>.</p>
+
+<p>A desperate search on the intertubes revealed you can actually implement a registry hack to fix this. In this case, that is simply not possible. Word documents with macros that change registry values = malware, idk what it does, it&rsquo;s doing the WRONG thing.</p>
+
+<h2>The Solution</h2>
+
+<p>After a good hour making some of the most monstrous regular expressions I think I&rsquo;ve ever made, I finally started getting somewhere.</p>
+
+<pre><code>rewrite ^(.*)\ -\ (.*)$ $1#$2 redirect;
+</code></pre>
+
+<p>In the end this rewrite rule was born.</p>
+
+<p><strong>Note! &ndash; Nginx will automatically translate the %20 to a space before it hits the rewrite block.</strong></p>
+
+<p>Here it is in action!</p>
+
+<pre><code>curl -v 'http://localhost/index.html%20-%20thingy'
+</code></pre>
+
+<p><code>2015/08/26 13:26:58 [notice] 17521#0: *67 "^(.*)\ -\ (.*)$" matches "/index.html - thingy", client: 127.0.0.1, server: localhost, request: "GET /index.html%20-%20thingy HTTP/1.1", host: "localhost"</code></p>
+
+<pre><code>&lt; HTTP/1.1 302 Moved Temporarily`
+&lt; Location: http://localhost/index.html#thingy`
+</code></pre>
+
+<p>Yay!</p>
+]]></content>
+  </entry>
+  
+</feed>
